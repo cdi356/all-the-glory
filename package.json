@@ -1,13 +1,45 @@
 {
   "name": "all-the-glory",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "description": "ALL THE GLORY - a 3D open-world crime comedy",
   "scripts": {
     "build": "node tools/build.js",
     "dev": "node tools/serve.js --debug",
-    "start": "node tools/serve.js"
+    "start": "node tools/serve.js",
+    "app": "node tools/build.js && electron .",
+    "exe": "node tools/build.js && node tools/icon.js && electron-builder --win portable"
   },
-  "dependencies": { "three": "0.160.1" },
-  "devDependencies": { "esbuild": "0.17.19" }
+  "dependencies": {
+    "three": "0.160.1"
+  },
+  "devDependencies": {
+    "electron": "^28.3.3",
+    "electron-builder": "^24.13.3",
+    "esbuild": "0.17.19"
+  },
+  "main": "electron/main.js",
+  "author": "ALL THE GLORY",
+  "build": {
+    "appId": "com.alltheglory.game",
+    "productName": "ALL THE GLORY",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/**",
+      "dist/all-the-glory.html",
+      "tools/lan-core.js",
+      "package.json"
+    ],
+    "win": {
+      "target": "portable",
+      "icon": "electron/icon.png"
+    },
+    "portable": {
+      "artifactName": "ALL THE GLORY.exe"
+    },
+    "asar": true,
+    "compression": "normal"
+  }
 }

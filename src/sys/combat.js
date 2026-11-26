@@ -50,7 +50,7 @@ export class Gun {
   dmgMul() { return 1 + (this.lvl - 1) * .12; }
   get infinite() { return !G.isH(this.owner) ? true : this.def.ammo === 'none'; }
   reserve() { return this.infinite ? Infinity : (G.S.ammo[this.def.ammo] || 0); }
-  startReload() { if (this.reloading > 0 || this.def.melee || this.mag >= this.magSize() || this.reserve() <= 0) return false; let t = this.def.reload; if (G.isH(this.owner)) t *= G.modsOf(this.owner).reload; this.reloading = t; if (G.isH(this.owner)) G.audio.play('reload', null, .7); return true; }
+  startReload() { if (this.reloading > 0 || this.def.melee || this.mag >= this.magSize() || this.reserve() <= 0) return false; let t = this.def.reload * this.reloadMul(); if (G.isH(this.owner)) t *= G.modsOf(this.owner).reload; this.reloading = t; if (G.isH(this.owner)) G.audio.play('reload', null, .7); return true; }
   finishReload() { const need = this.magSize() - this.mag, n = Math.min(need, this.reserve()); this.mag += n; if (!this.infinite) G.S.ammo[this.def.ammo] -= n; }
   update(dt) { this.cool = Math.max(0, this.cool - dt); this.bloom = Math.max(0, this.bloom - dt * 3); if (this.reloading > 0) { this.reloading -= dt; if (this.reloading <= 0) { this.reloading = 0; this.finishReload(); } } if (this.def.spin && !this.trig) this.spin = Math.max(0, this.spin - dt * 1.5); if (this.burstN > 0) { this.burstT -= dt; if (this.burstT <= 0 && this.lastArgs && this.mag > 0 && this.owner.alive) { this.burstN--; this.burstT = .06; this.shoot(...this.lastArgs(), true); } else if (this.mag <= 0) this.burstN = 0; } }
   // aim(): returns [origin, dir]
@@ -63,9 +63,9 @@ export class Gun {
   }
   shoot(origin, dir) {
     const d = this.def, own = this.owner, isP = G.isH(own); if (d.costs && isP) { if (G.S.cash < d.costs) { G.audio.play('empty'); G.hud && G.hud.toast('Out of quarters. Be richer.'); this.cool = .5; return; } G.S.cash -= d.costs; }
-    this.mag--; own.model.kick = 1; own.lastShot = G.time; const muzzle = own.muzzle(_o.clone()); const silent = this.mods.suppressor; let spread = isP ? (own.aiming ? d.ads : d.spread) * (this.mods.scope ? .7 : 1) * G.modsOf(own).spread + this.bloom * .012 + (own.speedXZ > 4 ? .015 : 0) : (own.accuracy || .06); if (own.ability && own.ability.on && own.charId === 'donald') spread *= .5; this.bloom = Math.min(1.6, this.bloom + .22 * d.recoil);
+    this.mag--; own.model.kick = 1; own.lastShot = G.time; const muzzle = own.muzzle(_o.clone()); const silent = this.mods.suppressor || d.quietGun; let spread = isP ? (own.aiming ? d.ads : d.spread) * (this.mods.scope ? .7 : 1) * this.accMul() * G.modsOf(own).spread + this.bloom * .012 + (own.speedXZ > 4 ? .015 : 0) : (own.accuracy || .06); if (own.ability && own.ability.on && own.charId === 'donald') spread *= .5; this.bloom = Math.min(1.6, this.bloom + .22 * d.recoil);
     G.audio.play(silent ? 'silenced' : d.snd, isP ? null : muzzle, isP ? .85 : .7); if (!d.flame) G.fx.muzzle(muzzle, dir, d.cls === 'shotgun' || d.cls === 'sniper' ? 1.7 : d.cls === 'signature' ? 1.4 : 1, d.snd === 'smart' ? [.6, 3, 2.6] : d.beam ? [1, 1.4, 4] : [4, 2.4, .9]);
-    G.bus.emit('noise', own.pos, silent ? 8 : d.vol || 45, own); G.bus.emit('shot', own, this); if (isP) { G.camOf(own).recoil(d.recoil * (this.mods.grip ? .6 : 1) * G.modsOf(own).recoil); G.S.stats.shots = (G.S.stats.shots || 0) + 1; }
+    G.bus.emit('noise', own.pos, silent ? 8 : d.vol || 45, own); G.bus.emit('shot', own, this); if (isP) { G.camOf(own).recoil(d.recoil * (this.mods.grip ? .6 : 1) * this.recMul() * G.modsOf(own).recoil); G.S.stats.shots = (G.S.stats.shots || 0) + 1; }
     for (let k = 0; k < d.pellets; k++) {
       const dr = V3(dir.x, dir.y, dir.z); if (spread > 0) { dr.x += (Math.random() + Math.random() - 1) * spread; dr.y += (Math.random() + Math.random() - 1) * spread; dr.z += (Math.random() + Math.random() - 1) * spread; dr.normalize(); }
       if (d.proj) { spawnProj(d.proj, muzzle, dr, own, d, this); continue; }

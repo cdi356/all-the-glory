@@ -4,6 +4,8 @@ window.LOG = [];
 addEventListener('error', e => LOG.push('H ERR ' + e.message + ' ' + ((e.error && e.error.stack) || '').slice(0, 300)));
 addEventListener('unhandledrejection', e => LOG.push('H REJ ' + (e.reason && e.reason.stack || e.reason)));
 window.both = async s => { const t0 = performance.now(); while (performance.now() - t0 < s * 1000) { G.frame(1 / 30); W.G.frame(1 / 30); await new Promise(r => setTimeout(r, 14)); } };
+// fake bad Wi-Fi between host and joiner: one-way delay in ms, plus random jitter (order is kept, like TCP)
+window.lag = (ms, jitter = 0) => { const ws = W.G.net.ws, h = ws.onmessage; let t = 0; ws.onmessage = e => { const at = Math.max(t, performance.now() + ms + Math.random() * jitter); t = at; setTimeout(() => h(e), at - performance.now()); }; const snd = ws.send.bind(ws); let t2 = 0; ws.send = d => { const at = Math.max(t2, performance.now() + ms + Math.random() * jitter); t2 = at; setTimeout(() => { if (ws.readyState === 1) snd(d); }, at - performance.now()); }; };
 window.lanSetup = async (mission, char) => {
   await G.test.fresh(mission); G.debug.auto = false; G.debug.norender = true; G.story.clear(); G.side.enc = 9999; G.player.pos.set(-262, .2, -120);
   const ok = await new Promise(r => G.net.startHost((o, w) => r(o + ' ' + (w || '')))); const f = window.F = document.createElement('iframe'); f.src = location.origin + '/'; f.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;border:0;z-index:99'; document.body.appendChild(f); await new Promise(r => f.onload = r); await new Promise(r => setTimeout(r, 2500)); const W = window.W = f.contentWindow;

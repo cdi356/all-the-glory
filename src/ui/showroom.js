@@ -1,0 +1,48 @@
+// A small separate 3D view for the garage and the workbench: its own renderer, lights, orbit camera.
+import * as THREE from 'three';
+import { getDetailMat } from '../ent/vehmodels.js';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+
+export class Showroom {
+  constructor(host, kind) {
+    this.kind = kind; const c = this.canvas = document.createElement('canvas'); c.className = 'showcv'; host.appendChild(c);
+    const r = this.r = new THREE.WebGLRenderer({ canvas: c, antialias: true, powerPreference: 'high-performance' }); r.setPixelRatio(Math.min(2, devicePixelRatio)); r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.05; r.outputColorSpace = THREE.SRGBColorSpace; r.localClippingEnabled = true;
+    const s = this.scene = new THREE.Scene(); this.cam = new THREE.PerspectiveCamera(kind === 'car' ? 34 : 30, 1, .02, 200);
+    this.yaw = kind === 'car' ? .7 : -.5; this.pitch = kind === 'car' ? .22 : .25; this.dist = kind === 'car' ? 8.5 : 1.45; this.target = new THREE.Vector3(0, kind === 'car' ? .7 : .9, 0); this.offX = kind === 'car' ? 195 : 70; this.want = { yaw: this.yaw, pitch: this.pitch, dist: this.dist, target: this.target.clone() }; this.auto = true;
+    if (kind === 'car') this.garage(); else this.bench(); const pm = new THREE.PMREMGenerator(r); this.env = pm.fromScene(new RoomEnvironment(), .04).texture; s.environment = this.env; pm.dispose();
+    let drag = null; c.onpointerdown = e => { drag = [e.clientX, e.clientY, this.want.yaw, this.want.pitch]; this.auto = false; c.setPointerCapture(e.pointerId); }; c.onpointermove = e => { if (!drag) return; this.want.yaw = drag[2] - (e.clientX - drag[0]) * .008; this.want.pitch = Math.max(-.1, Math.min(1.2, drag[3] + (e.clientY - drag[1]) * .006)); }; c.onpointerup = () => { drag = null; }; c.onwheel = e => { this.want.dist = Math.max(kind === 'car' ? 4 : .6, Math.min(kind === 'car' ? 16 : 3, this.want.dist * (e.deltaY > 0 ? 1.1 : .9))); e.preventDefault(); };
+    this.t = 0; this.alive = true; let last = performance.now(); const loop = now => { if (!this.alive) return; requestAnimationFrame(loop); const dt = Math.min(.05, (now - last) / 1000); last = now; this.frame(dt); }; requestAnimationFrame(loop);
+  }
+  garage() {
+    const s = this.scene; s.background = new THREE.Color(0x0b0c10); s.fog = new THREE.Fog(0x0b0c10, 18, 40);
+    const fc = document.createElement('canvas'); fc.width = fc.height = 512; const x = fc.getContext('2d'); x.fillStyle = '#3a3c40'; x.fillRect(0, 0, 512, 512); for (let i = 0; i < 2600; i++) { x.fillStyle = `rgba(${Math.random() < .5 ? '255,255,255' : '0,0,0'},${Math.random() * .05})`; x.fillRect(Math.random() * 512, Math.random() * 512, 3, 3); } x.strokeStyle = 'rgba(255,210,74,.5)'; x.lineWidth = 6; x.strokeRect(3, 3, 506, 506); const ft = new THREE.CanvasTexture(fc); ft.wrapS = ft.wrapT = THREE.RepeatWrapping; ft.repeat.set(6, 6); ft.colorSpace = THREE.SRGBColorSpace;
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(60, 60).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ map: ft, roughness: .45, metalness: .15 })); floor.receiveShadow = true; s.add(floor);
+    this.turn = new THREE.Mesh(new THREE.CylinderGeometry(3.4, 3.5, .08, 48), new THREE.MeshStandardMaterial({ color: 0x24262c, roughness: .3, metalness: .7 })); this.turn.position.y = .04; this.turn.receiveShadow = true; s.add(this.turn); const ring = new THREE.Mesh(new THREE.TorusGeometry(3.45, .03, 6, 64).rotateX(Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xffb030 })); ring.position.y = .09; s.add(ring);
+    const wall = new THREE.Mesh(new THREE.PlaneGeometry(40, 12), new THREE.MeshStandardMaterial({ color: 0x16181c, roughness: .9 })); wall.position.set(0, 6, -9); s.add(wall);
+    for (const [y, c] of [[3, 0xff3a8a], [5.2, 0x30f0ff]]) { const n = new THREE.Mesh(new THREE.BoxGeometry(24, .07, .07), new THREE.MeshBasicMaterial({ color: c })); n.position.set(0, y, -8.9); s.add(n); }
+    const logo = this.label('NOVA\'S TORQUE TEMPLE', '#ffb030'); logo.position.set(0, 7.4, -8.85); s.add(logo);
+    for (const sx of [-6, 6]) { const lift = new THREE.Mesh(new THREE.BoxGeometry(.3, 4, .3), new THREE.MeshStandardMaterial({ color: 0xc01a14, roughness: .5, metalness: .4 })); lift.position.set(sx, 2, -5); s.add(lift); }
+    s.add(new THREE.HemisphereLight(0x8a96b0, 0x201810, .7)); const key = new THREE.SpotLight(0xffffff, 260, 30, .6, .5, 1.6); key.position.set(4, 9, 5); key.castShadow = true; key.shadow.mapSize.set(2048, 2048); key.shadow.bias = -.0004; s.add(key); key.target.position.set(0, 0, 0); s.add(key.target);
+    const rim = new THREE.SpotLight(0x80c0ff, 120, 30, .7, .6, 1.6); rim.position.set(-6, 5, -5); s.add(rim); const fill = new THREE.PointLight(0xffb070, 30, 20); fill.position.set(-4, 2.5, 6); s.add(fill);
+  }
+  bench() {
+    const s = this.scene; s.background = new THREE.Color(0x0d0e10);
+    const wood = document.createElement('canvas'); wood.width = 512; wood.height = 256; const x = wood.getContext('2d'); for (let i = 0; i < 256; i++) { const v = 70 + Math.sin(i * .12) * 10 + Math.random() * 14; x.fillStyle = `rgb(${v + 30},${v * .7 + 8},${v * .45})`; x.fillRect(0, i, 512, 1); } const wt = new THREE.CanvasTexture(wood); wt.colorSpace = THREE.SRGBColorSpace;
+    const top = new THREE.Mesh(new THREE.BoxGeometry(3.4, .08, 1.6), new THREE.MeshStandardMaterial({ map: wt, roughness: .7 })); top.position.y = .76; top.receiveShadow = true; s.add(top); const mat = new THREE.Mesh(new THREE.PlaneGeometry(1.6, .9).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x1a4a3a, roughness: .9 })); mat.position.set(0, .802, 0); mat.receiveShadow = true; s.add(mat);
+    for (let k = -7; k <= 7; k++) { const l = new THREE.Mesh(new THREE.BoxGeometry(.004, .002, .9), new THREE.MeshBasicMaterial({ color: 0x3a8a6a })); l.position.set(k * .1, .804, 0); s.add(l); }
+    const board = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 1.4), new THREE.MeshStandardMaterial({ color: 0x5a4a38, roughness: .95 })); board.position.set(0, 1.5, -.75); s.add(board); const dots = new THREE.InstancedMesh(new THREE.CircleGeometry(.012, 6), new THREE.MeshBasicMaterial({ color: 0x2a2018 }), 30 * 12); let n = 0; const m4 = new THREE.Matrix4(); for (let i = 0; i < 30; i++) for (let j = 0; j < 12; j++) { m4.makeTranslation(-1.6 + i * .11, .9 + j * .11, -.745); dots.setMatrixAt(n++, m4); } s.add(dots);
+    const tool = (w, h, c, px, py, r) => { const q = new THREE.Mesh(new THREE.BoxGeometry(w, h, .02), new THREE.MeshStandardMaterial({ color: c, metalness: .6, roughness: .4 })); q.position.set(px, py, -.73); q.rotation.z = r; s.add(q); }; tool(.04, .32, 0xc01a14, -1.2, 1.5, .1); tool(.05, .26, 0x8a8e96, -1.05, 1.52, -.05); tool(.2, .05, 0x8a8e96, 1.1, 1.7, 0); tool(.04, .28, 0x2a5ac0, 1.3, 1.45, .2); tool(.03, .22, 0xd8b020, -.9, 1.4, 0);
+    const sign = this.label('AUNT BEV\'S BACK ROOM', '#ff5a5a'); sign.scale.setScalar(.22); sign.position.set(0, 2.0, -.74); s.add(sign);
+    s.add(new THREE.HemisphereLight(0x9aa4b8, 0x2a2018, 1.1)); const key2 = new THREE.DirectionalLight(0xffffff, 1.2); key2.position.set(-1, 3, 2); s.add(key2); const lamp = new THREE.SpotLight(0xfff0d8, 110, 6, .7, .45, 1.4); lamp.position.set(.3, 2.3, .6); lamp.castShadow = true; lamp.shadow.mapSize.set(1024, 1024); lamp.shadow.bias = -.0002; s.add(lamp); lamp.target.position.set(0, .8, 0); s.add(lamp.target); const rim = new THREE.PointLight(0x80b0ff, 3, 4); rim.position.set(-1.2, 1.4, .8); s.add(rim);
+    const shade = new THREE.Mesh(new THREE.ConeGeometry(.16, .16, 16, 1, true), new THREE.MeshStandardMaterial({ color: 0x2a3a2a, side: THREE.DoubleSide })); shade.position.set(.3, 2.35, .6); s.add(shade);
+  }
+  label(t, col) { const c = document.createElement('canvas'); c.width = 1024; c.height = 128; const x = c.getContext('2d'); x.font = '900 86px Bahnschrift,Impact,sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.shadowColor = col; x.shadowBlur = 24; x.fillStyle = col; x.fillText(t, 512, 68); const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; return new THREE.Mesh(new THREE.PlaneGeometry(12, 1.5), new THREE.MeshBasicMaterial({ map: tx, transparent: true, depthWrite: false })); }
+  focus(o) { Object.assign(this.want, o); if (o.target) this.want.target = o.target.clone(); }
+  frame(dt) {
+    const c = this.canvas, w = c.clientWidth, h = c.clientHeight; if (!w || !h) return; if (c.width !== Math.round(w * this.r.getPixelRatio()) || c.height !== Math.round(h * this.r.getPixelRatio())) { this.r.setSize(w, h, false); this.cam.aspect = w / h; this.cam.setViewOffset(w, h, w > 900 ? this.offX : 0, 0, w, h); this.cam.updateProjectionMatrix(); }
+    this.t += dt; if (this.auto) this.want.yaw += dt * .18; const k = 1 - Math.exp(-6 * dt); this.yaw += (this.want.yaw - this.yaw) * k; this.pitch += (this.want.pitch - this.pitch) * k; this.dist += (this.want.dist - this.dist) * k; this.target.lerp(this.want.target, k);
+    const cp = Math.cos(this.pitch); this.cam.position.set(this.target.x + Math.sin(this.yaw) * cp * this.dist, this.target.y + Math.sin(this.pitch) * this.dist, this.target.z + Math.cos(this.yaw) * cp * this.dist); this.cam.lookAt(this.target);
+    this.onFrame && this.onFrame(dt); this.r.render(this.scene, this.cam);
+  }
+  dispose() { this.alive = false; this.scene.traverse(o => { if (o.material && !o.material._shared && o.material !== getDetailMat()) { const m = Array.isArray(o.material) ? o.material : [o.material]; m.forEach(q => { if (q.map) q.map.dispose(); q.dispose(); }); } }); if (this.env) this.env.dispose(); this.r.dispose(); this.r.forceContextLoss(); this.canvas.remove(); }
+}

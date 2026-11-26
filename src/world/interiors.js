@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { G } from '../core/g.js';
 import { GeoB, V3, rng, TAU, M4 } from '../core/util.js';
+import { INT2 } from './interiors2.js';
 // Interiors are authored as ASCII floor plans (2 m tiles) and built lazily far from the city.
 // # wall  G glass  . floor  d desk  c crate  C tall crate  s server  p pillar  b counter  t table  h couch  k shelf  m machine  v vat  r low wall
 // B bed  o plant  T terminal  S safe  x cash  w washer  L lamp  l accent lamp  @ exit   1-9 named marks  e enemy  n npc  i item  z neon strip wall
@@ -49,6 +50,7 @@ export const INT = {
   apartment: { name: 'Apartment', env: E({ wall: '#6a5a6a', floor: '#4a3a34', accent: '#ff8ad0', lampC: 0xffc0a0, hemi: 1.0 }), map: ['############', '#BB.o..kk..#', '#BB.......1#', '#....L..hh.#', '#.2.....t..#', '#o......hh.#', '#####@######'] },
   tunnel: { name: 'Utility Tunnel', env: E({ wall: '#4a4438', floor: '#2c2a26', accent: '#ffa04a', hemi: .55, h: 3.4, fogD: .03, lampC: 0xffa050 }), map: ['########################################', '#@...e.....c......#....e....c.....#...1#', '#..L....c......e..#.c.....L.....e.#....#', '#......c.......L..............c........#', '#..c......e..c....#....c..e.......#.L..#', '#############.###########.##############', '#......c......e.......c.......e....c...#', '#..L.......c.....L.........L...c.....e.#', '#....e........c......e...c.........L...#', '########################################'] },
 };
+Object.assign(INT, INT2);
 export class Interior {
   constructor(id, idx) { this.id = id; this.idx = idx; this.def = INT[id]; this.env = this.def.env; this.ox = 4000 + (idx % 12) * 300; this.oz = -1400 + Math.floor(idx / 12) * 300; this.map = this.def.map; this.h = this.map.length; this.w = Math.max(...this.map.map(r => r.length)); this.marks = {}; this.lamps = []; this.group = new THREE.Group(); this.boxes = []; this.build(); G.scene.add(this.group); this.group.visible = false; }
   at(c, r) { const row = this.map[r]; return row && row[c] !== undefined ? row[c] : ' '; }
@@ -59,11 +61,13 @@ export class Interior {
     const e = this.env, g = new GeoB({ aB: 4 }), R = rng(this.id.length * 77 + this.w), ph = G.phys, H = e.h, ws = e.wallSt || 0; const bx = (x0, y0, z0, x1, y1, z1, o) => { this.boxes.push(ph.addBox(x0, y0, z0, x1, y1, z1, o)); };
     this.blocked = []; for (let r = 0; r < this.h; r++) for (let c = 0; c < this.w; c++) {
       const ch = this.at(c, r); this.blocked[r * this.w + c] = this.solid(ch); if (ch === ' ') continue; const x = this.ox + c * 2, z = this.oz + r * 2, mx = x + 1, mz = z + 1;
-      if ('0123456789@enilLa'.includes(ch)) (this.marks[ch] = this.marks[ch] || []).push(V3(mx, 0, mz));
+      if ('0123456789@enilLaEQ'.includes(ch)) (this.marks[ch] = this.marks[ch] || []).push(V3(mx, 0, mz));
       if (ch === '#' || ch === 'z') { const any = [[0, 1], [0, -1], [1, 0], [-1, 0]].some(([a, b]) => { const q = this.at(c + a, r + b); return q !== '#' && q !== ' '; }); if (any) { g.color(ch === 'z' ? e.accent : e.wall).set('aB', ch === 'z' ? 15 : ws, 0, ws === 17 ? 1.2 : 1.5, 0).box(x, 0, z, x + 2, H, z + 2); if (ch === '#' && ws === 0) { g.color(e.accent).set('aB', 6, 0, .5, 0); g.box(x - .02, .08, z - .02, x + 2.02, .16, z + 2.02, { noTop: true }); } } bx(x, 0, z, x + 2, H, z + 2); continue; }
       g.color(e.floor).set('aB', e.floorSt || 14, 0, 1, 0).quad([x, 0, z + 2], [x + 2, 0, z + 2], [x + 2, 0, z], [x, 0, z], [0, 0, 2, 0, 2, 2, 0, 2], [0, 1, 0]); g.color(e.ceil).set('aB', 0, 0, 0, 0).quad([x, H, z], [x + 2, H, z], [x + 2, H, z + 2], [x, H, z + 2], [0, 0, 2, 0, 2, 2, 0, 2], [0, -1, 0]);
       const S = (s, seed = 0, glow = 0) => g.set('aB', s, seed, glow, 0); const acc = (v = 2) => { g.color(e.accent); S(6, 0, v); }; const C = (c1) => { g.color(c1); S(0); return g; };
       switch (ch) {
+        case 'E': g.color('#1c1e22'); S(0); g.box(x + .1, 0, z - .02, x + 1.9, 3.2, z + .08); acc(2.2); g.box(x + .05, 3.2, z - .04, x + 1.95, 3.4, z + .1).box(x + .96, .1, z + .08, x + 1.04, 3.1, z + .1); g.color('#ffffff'); S(6, 0, 2); g.box(x + 1.55, 1.2, z + .08, x + 1.75, 1.5, z + .12); g.color(e.accent); S(6, 0, 1.4); g.box(x + .3, .01, z + .3, x + 1.7, .03, z + 1.7); break;
+        case 'Q': g.color('#c0c4cc'); S(0); g.cyl(mx, 0, .35, mz, 1.6, 1.6, 20); g.color(e.accent); S(6, 0, 2.4); g.cyl(mx, .35, .4, mz, 1.62, 1.62, 20, false); g.color('#e8ecf0'); S(0); g.cyl(mx, .35, H, mz, .05, .05, 8); bx(mx - .08, 0, mz - .08, mx + .08, H, mz + .08, { noSight: true, noShot: true }); bx(x - .6, 0, z - .6, x + 2.6, .35, z + 2.6); break;
         case 'G': g.color('#8ac8d8'); S(6, 0, .12); g.box(x + .9, 0, z, x + 1.1, H, z + 2); bx(x + .85, 0, z, x + 1.15, H, z + 2, { noSight: true }); break;
         case 'd': C('#4a3a30').box(x + .15, .72, z + .35, x + 1.85, .8, z + 1.65); C('#2c2420').box(x + .2, 0, z + .4, x + .35, .72, z + 1.6).box(x + 1.65, 0, z + .4, x + 1.8, .72, z + 1.6); C('#111').box(x + .6, .8, z + .9, x + 1.4, 1.3, z + .98); acc(.9); g.box(x + .65, .88, z + .98, x + 1.35, 1.26, z + 1); bx(x + .15, 0, z + .35, x + 1.85, .85, z + 1.65); break;
         case 'c': C(R.pick(['#6a5a3a', '#4a5a4a', '#5a4a4a'])); g.box(x + .2, 0, z + .2, x + 1.8, 1.15, z + 1.8); acc(.6); g.box(x + .18, .5, z + .18, x + 1.82, .58, z + 1.82, { noTop: true }); bx(x + .2, 0, z + .2, x + 1.8, 1.15, z + 1.8); break;
