@@ -2,16 +2,31 @@
 export const N = 13, PITCH = 110, ROAD = 20, BLOCK = 90, HALF = 715, EDGE = 735, WATER_Y = -1.7;
 export const roadC = i => -HALF + i * PITCH;
 export const blockC = i => -660 + i * PITCH;
-export const MAP = [
+const MAP0 = [
   'HHHHHCCCCSSSS', 'HHHHHCCCCSSSS', 'HHHHNCCCCSSSS', 'SHHNNNDDDDSSS', 'SSNNNNDDDDSSS', 'SSNNNDDDDDDSS', 'SSNNPPDDDDDSS',
   'SSBBPPDDDDCCS', 'BBBBNNNDDCCCS', 'BBBBNNNNCCSSS', 'BBSSSSNNRRRRR', 'SSSSSSRRRRRRR', 'SSSSRRRRRRRRR'];
+// The 2.0 expansion adds EX rows of blocks to the north (negative j) and EX columns to the east (i >= 13).
+// Old block and road indices keep their coordinates, so roadC/blockC work unchanged with j < 0 and i > 12.
+export const EX = 4;
+const NORTH = ['GGGGPLLLLLTTTTTTT', 'GGGGLLLLPLLTTTTTT', 'GPGGLLLLLLTTTPTTT', 'GGGGHLLLLLTTTTTTF'];
+const EAST = ['TTTF', 'TTFF', 'TFFF', 'FFFF', 'FFFF', 'FFFF', 'PFFF', 'SFFF', 'SSFF', 'SSPF', 'RRFF', 'RRRF', 'RRRR'];
+export const MAP = [...NORTH, ...MAP0.map((r, j) => r + EAST[j])]; // MAP[j + EX][i]
+export const I0 = 0, I1 = N + EX - 1, J0 = -EX, J1 = N - 1; // block index ranges (inclusive)
+export const mapAt = (i, j) => { const r = MAP[j + EX]; return (r && r[i]) || null; };
+export const XMIN = -HALF, XMAX = -HALF + (N + EX) * PITCH, ZMIN = -HALF - EX * PITCH, ZMAX = HALF; // outermost road centerlines
+// how far (x, z) is outside the outermost roads; the old code's max(|x|,|z|) - HALF
+export const beyond = (x, z) => Math.max(XMIN - x, x - XMAX, ZMIN - z, z - ZMAX);
+export const NI0 = 0, NI1 = N + EX, NJ0 = -EX, NJ1 = N; // road node index ranges (inclusive)
+export const inCity = (x, z, m = 10) => beyond(x, z) < m;
+
 export const DISTRICTS = {
+  T: { name: 'Silicon Shoals', sub: 'Disrupting you since this morning', col: '#2a6a8a' }, L: { name: 'Lantern Quarter', sub: 'Old streets, new debts', col: '#8a3a2a' }, F: { name: 'The Foundry', sub: 'Smoke, steel and second chances', col: '#6a5a3a' }, G: { name: 'Greenway Hills', sub: 'Fresh air, fresher alibis', col: '#3a6a4a' },
   D: { name: 'The Vault District', sub: 'Money lives here. You do not.', col: '#8a7a4a' }, N: { name: 'Neon Row', sub: 'Open all night. So are the wounds.', col: '#7a3a7a' },
   C: { name: 'Little Circuit', sub: 'Warranty void on every corner', col: '#2d6a72' }, S: { name: 'The Sprawl', sub: 'Rent is due', col: '#6a5a4a' },
   H: { name: 'Glory Heights', sub: 'Gated, guarded, guilty', col: '#4a6a44' }, R: { name: 'Rust Harbor', sub: 'Everything falls off the back of something', col: '#6a4a34' },
   P: { name: 'Saint Vesper Park', sub: 'Please do not feed the drones', col: '#3a6a3a' }, B: { name: 'Solvent Beach', sub: 'Come on in, the water is mostly water', col: '#8a7a5a' },
 };
-export const districtAt = (x, z) => { const i = Math.floor((x + HALF) / PITCH), j = Math.floor((z + HALF) / PITCH); return (MAP[j] && MAP[j][i]) || null; };
+export const districtAt = (x, z) => mapAt(Math.floor((x + HALF) / PITCH), Math.floor((z + HALF) / PITCH));
 // ---- points of interest. door is on the +z (south) face unless `open`
 export const POIS = [
   { id: 'bank', name: 'Aurelian Trust Tower', bx: 7, bz: 5, type: 'tower', icon: '$', col: '#ffd24a', interior: 'banklobby' },
@@ -49,6 +64,17 @@ export const POIS = [
   { id: 'store3', name: '24/7/365/Forever', bx: 2, bz: 11, w: 24, d: 20, h: 8, style: 4, color: '#3f6a4c', sign: '24/7/365', sc: '#6aff6a', icon: 'S', col: '#6aff6a', interior: 'store' },
   { id: 'store4', name: '24/7/365/Forever', bx: 7, bz: 9, w: 24, d: 20, h: 8, style: 4, color: '#3f6a4c', sign: '24/7/365', sc: '#6aff6a', icon: 'S', col: '#6aff6a', interior: 'store' },
   { id: 'tailor', name: 'Fabric Crimes Tailoring', bx: 4, bz: 4, w: 26, d: 22, h: 11, style: 4, color: '#5a3a5a', sign: 'FABRIC CRIMES', sc: '#ff8ae0', icon: 'F', col: '#ff8ae0', shop: 'tailor' },
+  { id: 'coliseum', name: 'Vesper Coliseum', bx: 14, bz: 4, w: 70, d: 60, h: 24, style: 2, color: '#8a7a6a', sign: 'VESPER COLISEUM', sc: '#ff6a3a', icon: 'A', col: '#ff6a3a' },
+  { id: 'range', name: 'Foundry Gun Range & Gunsmith', bx: 15, bz: 7, w: 40, d: 28, h: 10, style: 5, color: '#4a4038', sign: 'GUNSMITH & RANGE', sc: '#ff5a5a', icon: 'W', col: '#ff8a5a', interior: 'gunsback' },
+  { id: 'dealer', name: 'Overdrive Motors', bx: 13, bz: 9, w: 46, d: 30, h: 9, style: 5, color: '#3a4a5a', sign: 'OVERDRIVE MOTORS', sc: '#5ac8ff', icon: '$', col: '#5ac8ff' },
+  { id: 'market', name: 'Lantern Night Market', bx: 7, bz: -2, w: 36, d: 26, h: 8, style: 4, color: '#7a2a20', sign: 'NIGHT MARKET', sc: '#ffb03a', icon: 'S', col: '#ffb03a' },
+  { id: 'campus', name: 'Halcyon Campus', bx: 14, bz: -3, w: 52, d: 44, h: 60, style: 1, color: '#2a4a5a', sign: 'HALCYON', sc: '#7affff', icon: 'Q', col: '#7affff' },
+  { id: 'observatory', name: 'Greenway Observatory', bx: 1, bz: -3, w: 34, d: 34, h: 18, style: 2, color: '#d8d4c8', sign: 'OBSERVATORY', sc: '#c8d8ff', icon: 'O', col: '#c8d8ff' },
+  { id: 'foundry', name: 'Kessler Steelworks', bx: 15, bz: 1, w: 60, d: 40, h: 22, style: 5, color: '#5a4a3a', sign: 'KESSLER STEEL', sc: '#ffa03a', icon: 'F', col: '#ffa03a' },
+  { id: 'teahouse', name: 'The Jade Ledger Teahouse', bx: 5, bz: -1, w: 30, d: 24, h: 11, style: 4, color: '#3a5a3a', sign: 'JADE LEDGER', sc: '#6affa0', icon: 'J', col: '#6affa0' },
+  { id: 'safe1', name: 'Shoals Loft (safehouse)', bx: 12, bz: -3, w: 30, d: 26, h: 48, style: 1, color: '#30505e', sign: 'THE LOFTS', sc: '#7affff', icon: 'H', col: '#9affe0', interior: 'apartment', safe: 90000 },
+  { id: 'safe2', name: 'Lantern Walk-up (safehouse)', bx: 6, bz: -4, w: 24, d: 22, h: 14, style: 4, color: '#6a3a2a', sign: 'ROOMS', sc: '#ffb03a', icon: 'H', col: '#9affe0', interior: 'apartment', safe: 45000 },
+  { id: 'safe3', name: 'Foundry Bunker (safehouse)', bx: 16, bz: 10, w: 28, d: 24, h: 9, style: 5, color: '#4a4a40', sign: 'NO ENTRY', sc: '#ff8a3a', icon: 'H', col: '#9affe0', interior: 'apartment', safe: 65000 },
   { id: 'chipshop', name: 'The Daemon Emporium', bx: 8, bz: 0, w: 26, d: 24, h: 14, style: 4, color: '#2a4a5a', sign: 'DAEMON EMPORIUM', sc: '#4ac8ff', icon: 'Q', col: '#4ac8ff', shop: 'chips' },
 ];
 export const POI = {}; for (const p of POIS) { POI[p.id] = p; p.x = blockC(p.bx); p.z = blockC(p.bz); p.door = { x: p.x, z: p.z + (p.d || 60) / 2 + 1.4 }; }

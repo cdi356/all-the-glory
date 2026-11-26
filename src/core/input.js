@@ -6,7 +6,7 @@ export const BINDS = {
   sprint: ['ShiftLeft', 'ShiftRight'], jump: ['Space'], crouch: ['KeyC', 'ControlLeft'], reload: ['KeyR'], interact: ['KeyE'], vehicle: ['KeyF'],
   scan: ['KeyQ'], throw: ['KeyG'], ability: ['KeyT'], heal: ['KeyH'], wheel: ['Tab'], swap: ['KeyZ'], phone: ['KeyP'], map: ['KeyM'], inventory: ['KeyI'],
   camera: ['KeyV'], radio: ['KeyX'], horn: ['KeyB'], melee: ['KeyN'], pause: ['Escape'], journal: ['KeyJ'], skip: ['Enter'], nextw: [],
-  n1: ['Digit1'], n2: ['Digit2'], n3: ['Digit3'], n4: ['Digit4'], n5: ['Digit5'], n6: ['Digit6'], n7: ['Digit7'], n8: ['Digit8'], n9: ['Digit9'],
+  photo: ['KeyO'], n1: ['Digit1'], n2: ['Digit2'], n3: ['Digit3'], n4: ['Digit4'], n5: ['Digit5'], n6: ['Digit6'], n7: ['Digit7'], n8: ['Digit8'], n9: ['Digit9'],
 };
 // In co-op the main keyboard player gives up the arrows and right-hand keys to the second keyboard player.
 const KB1 = Object.assign({}, BINDS, { fwd: ['KeyW'], back: ['KeyS'], left: ['KeyA'], right: ['KeyD'], sprint: ['ShiftLeft'] });

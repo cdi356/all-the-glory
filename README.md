@@ -10,17 +10,29 @@ Saves live in the browser's local storage for that file, so keep using the same 
 
 ## What is in it
 
-- **Saint Vesper**: 13 x 13 blocks, 8 districts, elevated expressways, beach, harbor, day/night, rain, traffic with working lights, pedestrians, 29 interiors
+- **Saint Vesper**: 17 x 17 blocks, 12 districts (new in 2.0: Silicon Shoals, Lantern Quarter, The Foundry, Greenway Hills), three elevated expressways, beach, harbor, day/night, rain, traffic with working lights, pedestrians, 29 interiors
+- **A living city**: street-food carts, buskers, dog walkers, flash mobs, fender-benders, proposals, muggings you can stop, police chases you can end, birds over the parks, smoking stacks in the Foundry, fireworks over the Lantern Quarter, and overheard chatter that follows the story
 - **Jeremiah, Jakob, Donald**: switch any time off-mission (Z), each with an ability (T) and a signature weapon: SUDO, THE MUFFLER, COIN-OP
-- **30 story missions** in five acts, checkpointed. Larry Goldman waits at the end. One of the three dies, chosen at random each playthrough
+- **30 story missions** in five acts, checkpointed. Larry Goldman waits at the end. One of the three dies, chosen at random each playthrough. The story does not end at the credits
+- **Five secret storylines** of three jobs each. Each ends with a one-of-a-kind weapon that is never sold anywhere
 - **Dating**: Nova, Priya, Echo, Tess. Four optional dates each, gifts, choices. Partners give perks, show up in the finale and change the epilogue
-- **Hideout**: the Suds of Anarchy laundromat. Sleep/save, workbench, wardrobe, garage, AI operations with Crumb the toaster
-- **33 weapons plus fists, 7 throwables**, attachments, upgrades, 17 usable items and gifts
+- **Hideouts**: the Suds of Anarchy laundromat, now customizable from the design board: 7 themes and 20 pieces of furniture in 10 slots (gun wall, server rack, holo fast-travel table, jukebox, hot tub, pool table, interest safe and more). Three more safehouses to buy across the city
+- **70+ weapons plus fists, 7 throwables**, and a **gunsmith** with 8 part slots (muzzle, barrel, optic, magazine, underbarrel, stock, ammo, finish) and 10 finishes, at the workbench, Aunt Bev's, the Foundry range and any safehouse
 - **Hacking**: scan mode, 24 quickhacks, breach minigames, drone piloting, smart traffic lights, ATMs
-- **22 vehicles** including a VTOL, with damage, tuning, theft, chop shop
-- **Wanted system** (5 stars), bank and store robberies, 5 races, fixer gigs, 25 golden ducks, random Repo encounters, casino, 35 perks, 14 cyberware implants, 6 businesses
+- **43 vehicles** including VTOLs, superbikes, a city bus and electric hypercars, with damage, tuning, theft, chop shop, and a dealership (Overdrive Motors)
+- **Things to do**: Vesper Coliseum arena (10 waves, cash out any time), Foundry target range, taxi shifts, vigilante patrols, 14 stunt jumps, street races, fixer gigs, 25 golden ducks, casino, night market, teahouse, observatory
+- **Photo mode** (O): free camera, filters, saves a PNG
+- **Wanted system** (5 stars), bank and store robberies, 35 perks, 14 cyberware implants, 6 businesses
+- **Graphics**: new Ultra quality (sharper image, 4096 shadows over a wider area, more street lights), sharpening and color grading on every setting
 
-## LAN co-op (laptop + desktop)
+## Wi-Fi co-op (nothing to install)
+
+1. Both computers open `dist/all-the-glory.html` (the same file) in Chrome or Edge
+2. Title screen > **Wi-Fi co-op** (or pause > **Co-op** mid-game). The host presses **Host** and sends the code it shows to the other player in any chat
+3. The other player pastes it under **This computer joins**, presses **Make my reply code** and sends that code back; the host pastes it and presses **Connect**
+4. Not on the same Wi-Fi? Tick the internet box on both computers (it asks a public Google STUN server to find a route; some strict networks still block it)
+
+## LAN co-op with a server (laptop + desktop)
 
 1. On the computer that hosts, run `HOST LAN GAME.bat` (needs Node.js there only). Leave the black window open. If Windows asks about the firewall, allow Node.js on **private** networks
 2. In the game: **LAN co-op** > **Host**, then Continue or New game. Or host mid-game from pause > **Co-op**

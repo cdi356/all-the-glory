@@ -38,7 +38,7 @@ export class Net {
   get host() { return this.role === 'host'; } get client() { return this.role === 'client'; }
   // ======================= connection =======================
   connect(first, onMsg, onFail) {
-    let ws; try { ws = new WebSocket(wsURL()); } catch (e) { onFail('Could not open a connection.'); return; } this.ws = ws; let opened = false; ws.onopen = () => { opened = true; ws.send(JSON.stringify(first)); }; ws.onmessage = e => { let m; try { m = JSON.parse(e.data); } catch (x) { return; } onMsg(m); }; ws.onclose = () => { if (this.ws !== ws) return; this.ws = null; onFail(opened ? 'The connection closed.' : 'No LAN server found.'); };
+    let ws; try { ws = this.sockFactory ? this.sockFactory() : new WebSocket(wsURL()); } catch (e) { onFail('Could not open a connection.'); return; } this.ws = ws; let opened = false; ws.onopen = () => { opened = true; ws.send(JSON.stringify(first)); }; ws.onmessage = e => { let m; try { m = JSON.parse(e.data); } catch (x) { return; } onMsg(m); }; ws.onclose = () => { if (this.ws !== ws) return; this.ws = null; onFail(opened ? 'The connection closed.' : 'No LAN server found.'); };
   }
   close() { const w = this.ws; this.ws = null; if (w) w.close(); }
   // ======================= HOST =======================

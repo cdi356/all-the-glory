@@ -24,6 +24,28 @@ export const VEH = {
   torque: { name: 'Torque Temple Special', cls: 'Hypercar', L: 4.5, W: 2, H: 1.16, top: 74, acc: 22, grip: 1.55, mass: 1200, hp: 420, price: 0, shape: 'super', paint: ['#ff8a2a'], under: '#ff8a2a' },
   pelican: { name: 'Pelican Nine', cls: 'VTOL', L: 8, W: 4.2, H: 2.6, top: 62, acc: 16, grip: 1, mass: 3000, hp: 1100, price: 0, shape: 'vtol', fly: true, paint: ['#c8d0d8'] },
   gnat: { name: 'Gnat Skyscooter', cls: 'VTOL', L: 3.2, W: 2.2, H: 1.4, top: 48, acc: 16, grip: 1, mass: 500, hp: 260, price: 220000, shape: 'gnat', fly: true, paint: ['#20c0b0', '#f04080'] },
+  // ---------------- 2.0 garage ----------------
+  zipp: { name: 'Zipp EV', cls: 'Compact', L: 3.9, W: 1.74, H: 1.52, top: 40, acc: 10, grip: 1.08, mass: 1100, hp: 270, price: 11000, shape: 'hatch', common: 2.4, electric: true, paint: ['#e8f0f4', '#4affd0', '#2a2a30', '#ff8ac0'] },
+  bubble: { name: 'Bubble 2', cls: 'Microcar', L: 2.9, W: 1.5, H: 1.5, top: 30, acc: 7, grip: 1.1, mass: 650, hp: 200, price: 3200, shape: 'hatch', common: 1.2, electric: true, paint: ['#ffd24a', '#7aff9a', '#ff6a4a', '#8ac8ff'] },
+  exec: { name: 'Executive LX', cls: 'Luxury Sedan', L: 5.1, W: 1.92, H: 1.46, top: 48, acc: 10, grip: 1.1, mass: 1800, hp: 380, price: 52000, shape: 'sedan', common: 1.2, paint: ['#101014', '#3a3a44', '#e8e8ec', '#2a1a1a'] },
+  cruiser: { name: 'Saint Cruiser', cls: 'Classic', L: 5.3, W: 2, H: 1.4, top: 40, acc: 7.5, grip: .9, mass: 1900, hp: 380, price: 16000, shape: 'muscle', common: 1, paint: ['#6ac8c0', '#f0e8d0', '#c04a4a', '#3a3a6a'], stripe: '#f0f0f0' },
+  stiletto: { name: 'Stiletto RS', cls: 'Sports', L: 4.3, W: 1.9, H: 1.24, top: 60, acc: 15.5, grip: 1.32, mass: 1180, hp: 310, price: 64000, shape: 'sports', common: .7, paint: ['#ffd020', '#ff2a2a', '#1a1a1e', '#2a6aff'], wing: true },
+  nocturne: { name: 'Nocturne', cls: 'Grand Tourer', L: 4.7, W: 1.96, H: 1.3, top: 62, acc: 14, grip: 1.25, mass: 1500, hp: 360, price: 88000, shape: 'sports', common: .5, paint: ['#0c0c12', '#2a1a3a', '#4a4a52'], under: '#8a4aff' },
+  tempest: { name: 'Tempest V12', cls: 'Hypercar', L: 4.6, W: 2.02, H: 1.12, top: 72, acc: 20, grip: 1.5, mass: 1300, hp: 320, price: 210000, shape: 'super', common: .2, paint: ['#e0e4ea', '#c0102a', '#103a8a', '#0a0a0c'], wing: true },
+  mantis: { name: 'Mantis EVX', cls: 'Electric Hypercar', L: 4.4, W: 2, H: 1.1, top: 70, acc: 24, grip: 1.48, mass: 1450, hp: 300, price: 260000, shape: 'super', common: .15, electric: true, paint: ['#5aff6a', '#f0f0f0', '#1a1a1a'], under: '#5aff6a' },
+  thunder: { name: 'Thunderclap', cls: 'Muscle', L: 4.9, W: 1.96, H: 1.34, top: 56, acc: 14.5, grip: .96, mass: 1600, hp: 420, price: 41000, shape: 'muscle', common: 1, paint: ['#ff6a10', '#101014', '#ffe040', '#1a4aa0'], stripe: '#101014' },
+  goliath: { name: 'Goliath SS', cls: 'Muscle', L: 5.1, W: 2, H: 1.4, top: 54, acc: 13, grip: .94, mass: 1750, hp: 480, price: 36000, shape: 'muscle', common: .8, paint: ['#2a4a2a', '#4a2a1a', '#d8d0b8'], stripe: '#ffd24a' },
+  warden: { name: 'Warden 4x4', cls: 'Off-road', L: 4.6, W: 2.05, H: 2, top: 44, acc: 10, grip: 1.05, mass: 2300, hp: 620, price: 34000, shape: 'suv', common: 1.2, paint: ['#6a6a40', '#c8b890', '#2a2a2a', '#a04020'], rack: true, bar: true },
+  atlas: { name: 'Atlas Overland', cls: 'Luxury SUV', L: 5.1, W: 2.02, H: 1.86, top: 48, acc: 10.5, grip: 1.02, mass: 2400, hp: 520, price: 72000, shape: 'suv', common: .9, paint: ['#101014', '#e8e8ec', '#3a4a5a'] },
+  camper: { name: 'Wanderlust', cls: 'Camper', L: 5.6, W: 2.1, H: 2.6, top: 34, acc: 6, grip: .88, mass: 2700, hp: 540, price: 19000, shape: 'van', common: .5, paint: ['#f0e8d0', '#6ac8c0'], rack: true, stripe: '#d0703a' },
+  news: { name: 'VSPR News Van', cls: 'Van', L: 5.2, W: 2.05, H: 2.4, top: 38, acc: 7.5, grip: .9, mass: 2400, hp: 480, price: 22000, shape: 'van', common: .3, paint: ['#e8e8ec'], dish: true, stripe: '#ff4a4a' },
+  hearse: { name: 'Last Ride', cls: 'Hearse', L: 6.2, W: 1.96, H: 1.6, top: 46, acc: 8, grip: .95, mass: 2300, hp: 500, price: 30000, shape: 'limo', common: .15, paint: ['#08080a'] },
+  rancher: { name: 'Rancher HD', cls: 'Heavy Pickup', L: 5.6, W: 2.1, H: 1.95, top: 44, acc: 9.5, grip: 1, mass: 2600, hp: 620, price: 33000, shape: 'pickup', common: 1.2, paint: ['#8a1a1a', '#e8e8e8', '#1a2a4a', '#3a3a3a'], bar: true },
+  bus: { name: 'Vesper Transit', cls: 'Bus', L: 10.5, W: 2.5, H: 3.2, top: 30, acc: 4.5, grip: .85, mass: 9000, hp: 1300, price: 60000, shape: 'truck', common: .45, paint: ['#2a6ad0', '#e0a020'], busy: true },
+  razor: { name: 'Razorback 1000', cls: 'Superbike', L: 2.2, W: .8, H: 1.1, top: 74, acc: 21, grip: 1.3, mass: 240, hp: 160, price: 46000, shape: 'bike', common: .4, bike: true, paint: ['#1a1a1a', '#ff2a2a', '#2a8aff', '#ffd020'] },
+  chopper: { name: 'Easy Payment', cls: 'Cruiser Bike', L: 2.5, W: .85, H: 1.1, top: 54, acc: 12, grip: 1.1, mass: 320, hp: 220, price: 14000, shape: 'bike', common: .5, bike: true, paint: ['#101010', '#6a1a1a', '#c0c4c8'] },
+  mudlark: { name: 'Mudlark', cls: 'Dirt Bike', L: 2.1, W: .75, H: 1.15, top: 52, acc: 16, grip: 1.15, mass: 200, hp: 150, price: 9000, shape: 'bike', common: .4, bike: true, paint: ['#ff8a10', '#30d040', '#f0f0f0'] },
+  hawk: { name: 'Hawk-X', cls: 'VTOL', L: 4.6, W: 3, H: 1.7, top: 66, acc: 20, grip: 1, mass: 900, hp: 420, price: 480000, shape: 'gnat', fly: true, paint: ['#1a1a1e', '#c0102a', '#e8e8ec'] },
 };
 for (const k in VEH) VEH[k].id = k;
 const PAINTS = ['#8a1c1c', '#1c3a6a', '#d8d8d8', '#16181c', '#5a6068', '#2a5a3a', '#a0845a', '#c8b89a', '#3a2a4a', '#b06020', '#e8e4d8', '#4a5a6a'];
@@ -76,6 +98,12 @@ function build(d) {
     const big = sh === 'vtol', bw = big ? 1.15 : .5; paint.add(bodyLoft([[-L, .2, 1.1, 1.5], [-L * .6, bw * .7, .7, 1.7], [-L * .2, bw, .5, big ? 2.3 : 1.2], [L * .3, bw, .5, big ? 2.3 : 1.1], [L * .62, bw * .9, .55, big ? 1.5 : .9], [L * .95, bw * .5, .7, 1.1], [L, bw * .2, .85, 1]])); if (big) { glass(); det.quad([-bw * .8, 1.5, L * .66], [bw * .8, 1.5, L * .66], [bw * .8, 2.33, L * .28], [-bw * .8, 2.33, L * .28]); for (const s of [-1, 1]) det.cbox(s * bw, 1.75, .6, .04, .6, 1.5); paint.cbox(0, 2.1, -L * .95, 2.6, .08, .6).cbox(0, 1.9, -L * .95, .1, 1, .7); } else { dark().cbox(0, 1.2, .1, .4, .1, .8); chrome().cbox(0, 1.35, .7, .9, .05, .05); }
     const fx = W * .8; for (const s of [-1, 1]) for (const z of [L * .42, -L * .5]) { paint.cbox(s * fx * .6, 1.25, z, fx * .8, .14, .4); dark(); det.add(new THREE.TorusGeometry(big ? .8 : .45, .14, 6, 18), M4(s * fx, 1.3, z, Math.PI / 2, 0, 0)); det.color('#40c8ff').set('glow', 2.4).add(new THREE.CylinderGeometry(big ? .66 : .36, big ? .66 : .36, .05, 14), M4(s * fx, 1.22, z)); } hl().cbox(0, .75, L * .96, .4, .1, .1); tail.color('#ff1818').cbox(0, 1.3, -L, .3, .12, .1); dark(); for (const s of [-1, 1]) det.cbox(s * bw * .8, .15, 0, .12, .1, L * 1.1).cbox(s * bw * .8, .35, L * .3, .08, .4, .08).cbox(s * bw * .8, .35, -L * .3, .08, .4, .08); seat.x = 0; seat.y = big ? .5 : .6; seat.z = big ? L * .3 : -.1;
   }
+  if (d.stripe && sh !== 'bike') { det.color(d.stripe).set('glow', 0); for (const s of [-.22, .22]) det.cbox(s, H + .012, 0, .16, .012, L * 1.6); }
+  if (d.wing) { dark(); for (const s of [-1, 1]) det.cbox(s * W * .55, H * .78, -L * .88, .06, .3, .14); paint.cbox(0, H * .92, -L * .9, W * 1.9, .05, .38); }
+  if (d.rack) { dark(); det.cbox(0, H + .08, -.1, W * 1.3, .05, L * .6); for (const s of [-1, 1]) det.cbox(s * W * .6, H + .03, -.1, .05, .1, L * .6); }
+  if (d.bar) { dark().cbox(0, H + .1, L * .18, W * 1.4, .08, .1); hl(); for (let k = -2; k <= 2; k++) det.cbox(k * W * .26, H + .1, L * .18 + .06, .16, .1, .03); }
+  if (d.dish) { chrome(); det.cyl(0, H, H + .5, -L * .3, .05, .05, 6); det.add(new THREE.SphereGeometry(.6, 12, 6, 0, TAU, 0, .9), M4(0, H + .7, -L * .3, -.6, 0, 0)); }
+  if (d.busy) { glass(); for (const s of [-1, 1]) det.cbox(s * W * 1.002, 2.1, -L * .2, .02, .8, L * 1.15); det.color('#ffe9a0').set('glow', 2).cbox(0, 2.75, L * .985, W * 1.2, .2, .03); }
   const bl = new GeoB({ glow: 1 }); // siren lamps
   return { paint: paint.build(), det: det.build(), tail: tail.build(), wheels, wr, ww, seat };
 }

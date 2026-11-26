@@ -28,9 +28,10 @@ export class Gfx {
         if(glitch>0.){ float ln=floor(u.y*38.); float g=step(1.-.35*glitch,h(vec2(ln,floor(time*22.)))); u.x+=g*(h(vec2(ln,time))-.5)*.14*glitch; }
         float ca=.0012+.004*slow+.01*glitch+.004*dmg+.003*drunk; vec2 off=c*ca*(1.+r2*4.);
         vec3 col=vec3(texture2D(tDiffuse,u+off).r,texture2D(tDiffuse,u).g,texture2D(tDiffuse,u-off).b);
+        vec2 px=1./res; vec3 nb=(texture2D(tDiffuse,u+vec2(px.x,0.)).rgb+texture2D(tDiffuse,u-vec2(px.x,0.)).rgb+texture2D(tDiffuse,u+vec2(0.,px.y)).rgb+texture2D(tDiffuse,u-vec2(0.,px.y)).rgb)*.25; col+=(col-nb)*.35;
         col*=expo*tint; col=aces(col*.92);
         float l=dot(col,vec3(.2126,.7152,.0722)); col=mix(vec3(l),col,1.12+.1*night); col=mix(col,col*vec3(.94,.98,1.07),night*.5*(1.-l));
-        col=pow(max(col,0.),vec3(1./2.2));
+        col=pow(max(col,0.),vec3(1./2.2)); float lm=dot(col,vec3(.2126,.7152,.0722)); col=mix(col,col*vec3(1.04,1.,.93)+vec3(.0,.006,.018)*(1.-lm),.6); col=mix(col,smoothstep(0.,1.,col),.18);
         if(scan>0.){ float ln=.94+.06*sin(u.y*res.y*1.2); vec3 sc=vec3(.12,.95,.82)*pow(dot(col,vec3(.3,.6,.1)),.85)*1.1; float ring=smoothstep(.05,0.,abs(length(c*vec2(res.x/res.y,1.))-fract(time*.45)*1.2)); col=mix(col,(sc+col*.25)*ln+ring*vec3(.02,.12,.1),scan*.72); }
         if(cyber>0.){ col=mix(col,vec3(l)*vec3(.3,1.1,1.)+col*.3,cyber*.35); col*=.96+.04*sin(u.y*res.y*1.5+time*8.); }
         if(slow>0.){ col=mix(col,vec3(dot(col,vec3(.33)))*vec3(1.1,1.,.85),slow*.45); }
@@ -44,7 +45,7 @@ export class Gfx {
   lights() {
     const s = this.sun = new THREE.DirectionalLight(0xffffff, 3); s.castShadow = true; s.shadow.mapSize.set(2048, 2048); const d = 75; Object.assign(s.shadow.camera, { left: -d, right: d, top: d, bottom: -d, near: 1, far: 420 }); s.shadow.bias = -.0004; s.shadow.normalBias = .06; this.scene.add(s, s.target);
     this.hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1); this.scene.add(this.hemi);
-    this.points = []; for (let i = 0; i < 4; i++) { const p = new THREE.PointLight(0xffb070, 0, 22, 1.6); p.position.set(0, -500, 0); this.scene.add(p); this.points.push(p); }
+    this.points = []; for (let i = 0; i < 6; i++) { const p = new THREE.PointLight(0xffb070, 0, 22, 1.6); p.position.set(0, -500, 0); this.scene.add(p); this.points.push(p); }
     this.flashes = []; for (let i = 0; i < 1; i++) { const p = new THREE.PointLight(0xffc060, 0, 18, 1.8); this.scene.add(p); this.flashes.push({ l: p, t: 0, d: 1, i: 0 }); }
     this.spot = new THREE.SpotLight(0xfff0d8, 0, 48, .62, .6, 1.2); this.scene.add(this.spot, this.spot.target);
     this.scene.fog = new THREE.FogExp2(0x101420, .0022);
@@ -68,8 +69,8 @@ export class Gfx {
     this.rainU = { time: U.uTime, cam: { value: new THREE.Vector3() }, a: { value: 0 } }; this.rain = new THREE.LineSegments(g, new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: this.rainU, vertexShader: `attribute float al; varying float vA; uniform float time; uniform vec3 cam; void main(){ vec3 p=position; p.y-=al*0.; float sp=24.; vec3 q; q.x=mod(p.x-cam.x,56.)-28.; q.z=mod(p.z-cam.z,56.)-28.; float by=p.y-al*.75; q.y=mod(by-cam.y-time*sp,26.)-11.+al*.75; vA=al*.4+.06; gl_Position=projectionMatrix*viewMatrix*vec4(q+cam,1.); }`, fragmentShader: 'varying float vA; uniform float a; void main(){gl_FragColor=vec4(.65,.75,.9,vA*a*.55);}' })); this.rain.frustumCulled = false; this.rain.visible = false; this.scene.add(this.rain);
     this.weather = { rain: 0, want: 0, t: 120, flash: 0, cloud: .4 };
   }
-  setQuality(q) { this.quality = q; this.resize(); this.sun.shadow.mapSize.setScalar(q === 'low' ? 1024 : 2048); if (this.sun.shadow.map) { this.sun.shadow.map.dispose(); this.sun.shadow.map = null; } this.bloom.enabled = true; const s = q === 'high' ? 4 : 0; this.comp.renderTarget1.samples = s; this.comp.renderTarget2.samples = s; this.comp.renderTarget1.dispose(); this.comp.renderTarget2.dispose(); }
-  resize() { const w = innerWidth || 1280, h = innerHeight || 720; const dpr = Math.min(devicePixelRatio || 1, this.quality === 'high' ? 1.25 : 1) * (this.quality === 'low' ? .7 : 1) * (this.adapt || 1); this.renderer.setPixelRatio(dpr); this.renderer.setSize(w, h, false); this.dpr = dpr; this.compW = 0; const R = G.coop && G.coop.on && G.coop.locals().length > 1 ? G.coop.rects()[0] : null; this.setComp(R ? R[2] : w, R ? R[3] : h); this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); }
+  setQuality(q) { this.quality = q; this.resize(); this.sun.shadow.mapSize.setScalar(q === 'low' ? 1024 : q === 'ultra' ? 4096 : 2048); const sd = q === 'ultra' ? 120 : 75; Object.assign(this.sun.shadow.camera, { left: -sd, right: sd, top: sd, bottom: -sd }); this.sun.shadow.camera.updateProjectionMatrix(); if (this.sun.shadow.map) { this.sun.shadow.map.dispose(); this.sun.shadow.map = null; } this.bloom.enabled = true; const s = q === 'high' || q === 'ultra' ? 4 : 0; this.comp.renderTarget1.samples = s; this.comp.renderTarget2.samples = s; this.comp.renderTarget1.dispose(); this.comp.renderTarget2.dispose(); }
+  resize() { const w = innerWidth || 1280, h = innerHeight || 720; const dpr = Math.min(devicePixelRatio || 1, this.quality === 'ultra' ? 2 : this.quality === 'high' ? 1.25 : 1) * (this.quality === 'low' ? .7 : 1) * (this.adapt || 1); this.renderer.setPixelRatio(dpr); this.renderer.setSize(w, h, false); this.dpr = dpr; this.compW = 0; const R = G.coop && G.coop.on && G.coop.locals().length > 1 ? G.coop.rects()[0] : null; this.setComp(R ? R[2] : w, R ? R[3] : h); this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); }
   setComp(w, h) { if (this.compW === w && this.compH === h && this.compD === this.dpr) return; this.compW = w; this.compH = h; this.compD = this.dpr; this.comp.setPixelRatio(this.dpr); this.comp.setSize(w, h); this.bloom.setSize(w * this.dpr / 2, h * this.dpr / 2); this.final.uniforms.res.value.set(w, h); }
   setInterior(env) { this.interior = env; if (env) this.envT = -99; }
   update(dt, rdt) {
@@ -100,7 +101,7 @@ export class Gfx {
   }
   fadeMain(rdt) { const M = this.mainFx; M.damage = Math.max(0, M.damage - rdt * 1.2); M.glitch = Math.max(0, M.glitch - rdt * 1.6); M.flash = Math.max(0, M.flash - rdt * 3); }
   lampLights(night, sm) {
-    const c = G.focus || G.camera.position; sm.lampT = (sm.lampT || 0) - 1; if (sm.lampT <= 0) { sm.lampT = 12; const L = []; for (const l of G.city.lampSpots) { const d = (l[0] - c.x) ** 2 + (l[1] - c.z) ** 2; if (d < 3600) L.push([d, l]); } L.sort((a, b) => a[0] - b[0]); sm.lampNear = L.slice(0, 4); }
+    const c = G.focus || G.camera.position; sm.lampT = (sm.lampT || 0) - 1; if (sm.lampT <= 0) { sm.lampT = 12; const L = []; for (const l of G.city.lampSpots) { const d = (l[0] - c.x) ** 2 + (l[1] - c.z) ** 2; if (d < 3600) L.push([d, l]); } L.sort((a, b) => a[0] - b[0]); sm.lampNear = L.slice(0, 6); }
     for (let i = 0; i < this.points.length; i++) { const p = this.points[i], n = sm.lampNear && sm.lampNear[i]; if (n && night > .3) { p.position.set(n[1][0], 5.2, n[1][1]); p.color.setHex(0xffb060); p.intensity = 34 * smooth(.3, .7, night); p.distance = 24; } else p.intensity = 0; }
   }
   // keep the frame rate up on slower GPUs by shrinking the internal resolution

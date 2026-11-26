@@ -1,10 +1,11 @@
+import { skinMesh } from '../sys/gunsmith.js';
 import * as THREE from 'three';
 import { G } from '../core/g.js';
 import { V3, clamp, lerp, damp, dampA, wrapA, rand, randi, pick, chance, dist2, yawTo, turnTo, TAU } from '../core/util.js';
 import { Human, LOOKS, varyLook, randomLook } from './human.js';
 import { Gun, weaponMesh, meleeHit, throwItem } from '../sys/combat.js';
 import { WEAPONS } from '../sys/weapondata.js';
-import { WATER_Y, EDGE } from '../world/citydata.js';
+import { WATER_Y, EDGE, beyond } from '../world/citydata.js';
 
 const ENEMY = new Set(['guard', 'repo', 'rat', 'liq', 'ott', 'prog', 'boss']);
 const _v = V3(), _w = V3();
@@ -18,7 +19,7 @@ export class Actor {
     const ca = a === 'crew' || a === 'ally', cb = b === 'crew' || b === 'ally'; if (ca && cb) return false; if (loose && G.isH(this) && !cb) return true; if (ca || cb) { const x = ca ? b : a; if (ENEMY.has(x)) return true; if (x === 'cop') return !!(G.police && G.police.stars > 0); if (x === 'hostilePed') return true; return false; }
     return false;
   }
-  setGun(id, mods, lvl) { if (!id || id === 'fists') { this.gun = id ? new Gun('fists', this) : null; this.model.attach(null); return; } this.gun = new Gun(id, this); if (mods) this.gun.mods = mods; if (lvl) this.gun.lvl = lvl; this.gun.mag = this.gun.magSize(); this.model.attach(weaponMesh(id)); }
+  setGun(id, mods, lvl) { if (!id || id === 'fists') { this.gun = id ? new Gun('fists', this) : null; this.model.attach(null); return; } this.gun = new Gun(id, this); if (mods) this.gun.mods = mods; if (lvl) this.gun.lvl = lvl; this.gun.mag = this.gun.magSize(); this.model.attach(skinMesh(weaponMesh(id), mods)); }
   muzzle(out) { const s = Math.sin(this.faceYaw), c = Math.cos(this.faceYaw), h = this.look.h || 1; const y = this.vehicle ? 1.15 : (this.crouch ? 1.05 : this.gun && this.gun.def.hold === 'heavy' ? 1.12 : 1.4) * h; const f = this.gun ? (this.gun.def.hold === 'pistol' ? .72 : .85) : .5; return out.set(this.pos.x + s * f - c * .16, this.pos.y + y + Math.sin(this.pitch) * f, this.pos.z + c * f + s * .16); }
   eye(out = V3()) { return out.set(this.pos.x, this.pos.y + (this.crouch ? 1.15 : 1.6) * (this.look.h || 1), this.pos.z); }
   damage(n, info = {}) {
@@ -36,8 +37,8 @@ export class Actor {
   }
   physics(dt, wx, wz, acc = 12) { // wish velocity
     const v = this.vel; if (this.onGround) { v.x = damp(v.x, wx, acc, dt); v.z = damp(v.z, wz, acc, dt); } else { v.x = damp(v.x, wx, 1.6, dt); v.z = damp(v.z, wz, 1.6, dt); v.y -= 19 * dt; }
-    const inWater = this.pos.y < WATER_Y - .9 && Math.max(Math.abs(this.pos.x), Math.abs(this.pos.z)) > EDGE && Math.abs(this.pos.x) < 1500; this.swim = false; G.phys.move(this, dt); const maxD = 900; if (Math.abs(this.pos.x) < 1500 && Math.abs(this.pos.z) < 1500) { this.pos.x = clamp(this.pos.x, -maxD, maxD); this.pos.z = clamp(this.pos.z, -maxD, maxD); }
-    if (Math.abs(this.pos.x) < 1500 && this.pos.y < WATER_Y - 1.05 && Math.max(Math.abs(this.pos.x), Math.abs(this.pos.z)) > EDGE) { this.swim = true; this.pos.y = damp(this.pos.y, WATER_Y - 1.1, 6, dt); v.y = 0; this.onGround = true; v.x *= 1 - Math.min(1, dt * 1.5); v.z *= 1 - Math.min(1, dt * 1.5); }
+    const inWater = this.pos.y < WATER_Y - .9 && beyond(this.pos.x, this.pos.z) > 20 && Math.abs(this.pos.x) < 1500; this.swim = false; G.phys.move(this, dt); const maxD = 900; if (Math.abs(this.pos.x) < 1500 && Math.abs(this.pos.z) < 1500) { this.pos.x = clamp(this.pos.x, -maxD, maxD); this.pos.z = clamp(this.pos.z, -maxD, maxD); }
+    if (Math.abs(this.pos.x) < 1500 && this.pos.y < WATER_Y - 1.05 && beyond(this.pos.x, this.pos.z) > 20) { this.swim = true; this.pos.y = damp(this.pos.y, WATER_Y - 1.1, 6, dt); v.y = 0; this.onGround = true; v.x *= 1 - Math.min(1, dt * 1.5); v.z *= 1 - Math.min(1, dt * 1.5); }
     if (this.landV > 11) { const d = (this.landV - 11) * 8 * (this.fallMul ?? 1); if (d > 4) this.damage(d, { fall: true }); G.audio.play('land', this.pos); } this.landV = 0; this.speedXZ = Math.hypot(v.x, v.z); if (this.pos.y < -60) { this.pos.y = 5; v.set(0, 0, 0); }
   }
   syncModel() { const g = this.model.group; g.position.copy(this.pos); g.rotation.y = this.yaw; }

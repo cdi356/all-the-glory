@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { G } from '../core/g.js';
 import { V3, clamp, lerp, damp, dampA, wrapA, rand, randi, pick, chance, dist2, yawTo, TAU } from '../core/util.js';
 import { VEH, vehGeo, wheelGeo, getDetailMat, paintFor } from './vehmodels.js';
-import { N, PITCH, HALF, EDGE, WATER_Y, roadC } from '../world/citydata.js';
+import { N, PITCH, HALF, EDGE, WATER_Y, roadC, beyond, NI0, NI1, NJ0, NJ1 } from '../world/citydata.js';
 
 const _v = V3(), _e = new THREE.Euler(), _pt = V3();
 let uid = 1;
@@ -48,7 +48,7 @@ export class Vehicle {
   drive(dt, far) {
     const d = this.def, p = this.pos, v = this.vel, sy = Math.sin(this.yaw), cy = Math.cos(this.yaw); let vf = v.x * sy + v.z * cy, vr = v.x * cy - v.z * sy; const isP = G.isH(this.driver); const M = isP ? G.modsOf(this.driver) : null;
     const jak = isP && this.driver.ability && this.driver.ability.on && this.driver.charId === 'jakob'; const top = d.top * (1 + (this.tuneTop || 0)) * (jak ? 1.3 : 1) * (this.boost > 0 ? 1.25 : 1), acc = d.acc * (1 + (this.tuneAcc || 0)) * (M ? M.vehAcc : 1) * (jak ? 1.5 : 1) * (this.boost > 0 ? 1.9 : 1); if (this.boost > 0) this.boost -= dt;
-    const wet = G.gfx && !G.interior ? 1 - .14 * G.gfx.weather.rain : 1; let grip = d.grip * wet * (1 + (this.tuneGrip || 0)) * (M ? M.vehGrip : 1) * (jak ? 1.35 : 1); const sand = Math.max(Math.abs(p.x), Math.abs(p.z)) > EDGE; if (sand) grip *= .6; if (this.tires === 0) grip *= .55;
+    const wet = G.gfx && !G.interior ? 1 - .14 * G.gfx.weather.rain : 1; let grip = d.grip * wet * (1 + (this.tuneGrip || 0)) * (M ? M.vehGrip : 1) * (jak ? 1.35 : 1); const sand = beyond(p.x, p.z) > 20; if (sand) grip *= .6; if (this.tires === 0) grip *= .55;
     if (this.onGround) {
       let f = 0; if (this.throttle > 0) f = acc * this.throttle * Math.max(0, 1 - Math.pow(Math.max(0, vf) / top, 2)); else if (this.throttle < 0) f = vf > .5 ? -d.acc * 2.2 * -this.throttle : acc * .6 * this.throttle * Math.max(0, 1 + vf / 13);
       if (sand) f *= .7; vf += f * dt; if (this.brake > 0) { const b = 16 * this.brake * dt; vf = Math.abs(vf) < b ? 0 : vf - Math.sign(vf) * b; } if (this.hand) { const b = 7 * dt; vf = Math.abs(vf) < b ? 0 : vf - Math.sign(vf) * b; }
@@ -61,7 +61,7 @@ export class Vehicle {
     this.collide(dt);
     // vertical
     const L = d.L * .34, fx = Math.sin(this.yaw) * L, fz = Math.cos(this.yaw) * L; const gf = G.phys.ground(p.x + fx, p.z + fz, p.y, .65), gb = G.phys.ground(p.x - fx, p.z - fz, p.y, .65), gc = G.phys.ground(p.x, p.z, p.y, .65); let g = Math.max((gf + gb) / 2, gc); if (Math.abs(gf - gb) > 1.6) g = gc;
-    const lim = WATER_Y; if (g < lim - 1.2 && p.y < lim - .3 && Math.max(Math.abs(p.x), Math.abs(p.z)) > EDGE) { v.multiplyScalar(1 - Math.min(1, dt * 3)); if (!this.sunk) { this.sunk = true; G.audio.play('splash', p); G.fx.splash(p.x, p.z); } p.y = Math.max(p.y - dt * .7, g); if (this.alive) { this.hp = Math.min(this.hp, 1); const o = [this.driver, ...this.seats].filter(Boolean); for (const a of o) if (p.y < lim - .8) a.exitVehicle(true); this.ai = null; if (p.y < lim - 1.6) { this.alive = false; this.deadT = 10; } } }
+    const lim = WATER_Y; if (g < lim - 1.2 && p.y < lim - .3 && beyond(p.x, p.z) > 20) { v.multiplyScalar(1 - Math.min(1, dt * 3)); if (!this.sunk) { this.sunk = true; G.audio.play('splash', p); G.fx.splash(p.x, p.z); } p.y = Math.max(p.y - dt * .7, g); if (this.alive) { this.hp = Math.min(this.hp, 1); const o = [this.driver, ...this.seats].filter(Boolean); for (const a of o) if (p.y < lim - .8) a.exitVehicle(true); this.ai = null; if (p.y < lim - 1.6) { this.alive = false; this.deadT = 10; } } }
     else if (this.onGround) { const dy = (g - p.y) / Math.max(dt, .001); if (g < p.y - .28 && dy < -this.speed * .5 - 2) { this.onGround = false; v.y = this.lastVy || 0; } else { this.lastVy = clamp(damp(this.lastVy || 0, dy, 12, dt), -14, 14); p.y = g < p.y ? Math.max(g, p.y - (6 + this.speed * .5) * dt) : damp(p.y, g, 22, dt); if (g > p.y) p.y = Math.max(p.y, g - .3); v.y = 0; } }
     if (!this.onGround) { p.y += v.y * dt; if (p.y <= g) { const imp = -v.y; p.y = g; this.onGround = true; v.y = 0; this.lastVy = 0; this.bounce = clamp(imp * .03, 0, .25); if (imp > 8) { this.damage((imp - 8) * 9); G.audio.play('crash', p, .5); } else if (imp > 3) G.audio.play('bump', p, .6); if (G.isH(this.driver) && this.airT > 1.1) G.bus.emit('stunt', this, this.airT); this.airT = 0; } else this.airT = (this.airT || 0) + dt; }
     const tp = this.onGround ? Math.atan2(gb - gf, L * 2) : this.pitch + (v.y < 0 ? .25 : -.05) * dt; const ax = (this.throttle > 0 ? -.02 : 0) + (this.brake > 0 || this.hand ? .025 : 0); this.pitch = damp(this.pitch, clamp(tp, -.6, .6), 9, dt); this.accP = damp(this.accP || 0, ax, 6, dt); this.roll = damp(this.roll, clamp((d.bike ? -1 : 1) * this.yawRate * this.speed * (d.bike ? .05 : .006), -.65, .65), 8, dt); if (this.bounce > 0) this.bounce = Math.max(0, this.bounce - dt);
@@ -93,12 +93,12 @@ export class Vehicle {
   }
 }
 // ---------- road graph ----------
-export const nodeOf = (x, z) => [clamp(Math.round((x + HALF) / PITCH), 0, N), clamp(Math.round((z + HALF) / PITCH), 0, N)];
+export const nodeOf = (x, z) => [clamp(Math.round((x + HALF) / PITCH), NI0, NI1), clamp(Math.round((z + HALF) / PITCH), NJ0, NJ1)];
 const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-export const edgeOk = (i, j, dx, dz) => { const ni = i + dx, nj = j + dz; if (ni < 0 || nj < 0 || ni > N || nj > N) return false; const k = dx ? `h${Math.min(i, ni)},${j}` : `v${i},${Math.min(j, nj)}`; return !G.city.noTraffic.has(k); };
+export const edgeOk = (i, j, dx, dz) => { const ni = i + dx, nj = j + dz; if (ni < NI0 || nj < NJ0 || ni > NI1 || nj > NJ1) return false; const k = dx ? `h${Math.min(i, ni)},${j}` : `v${i},${Math.min(j, nj)}`; return !G.city.noTraffic.has(k); };
 // BFS over intersections, returns list of nodes
 export function roadPath(ax, az, bx, bz) {
-  const A = nodeOf(ax, az), B = nodeOf(bx, bz), k = (i, j) => i * 20 + j, prev = new Map([[k(...A), null]]), q = [A]; const order = DIRS.slice().sort(() => Math.random() - .5);
+  const A = nodeOf(ax, az), B = nodeOf(bx, bz), k = (i, j) => (i + 8) * 64 + j + 8, prev = new Map([[k(...A), null]]), q = [A]; const order = DIRS.slice().sort(() => Math.random() - .5);
   while (q.length) { const c = q.shift(); if (c[0] === B[0] && c[1] === B[1]) break; for (const [dx, dz] of order) if (edgeOk(c[0], c[1], dx, dz)) { const n = [c[0] + dx, c[1] + dz]; if (!prev.has(k(...n))) { prev.set(k(...n), c); q.push(n); } } }
   const out = []; let c = B; while (c) { out.unshift(c); c = prev.get(k(...c)); } return out;
 }
@@ -109,7 +109,7 @@ export class Driver {
   onHit(info) { if (this.mode === 'traffic' && info.from === G.player) this.panic(); }
   panic() { if (this.mode !== 'traffic') return; this.scared = true; this.cruise = 22; }
   initTraffic() {
-    const v = this.v; if (!this.from) { const h = Math.abs(Math.sin(v.yaw)) > .7 ? [Math.sign(Math.sin(v.yaw)), 0] : [0, Math.sign(Math.cos(v.yaw))]; const fx = (v.pos.x + HALF) / PITCH, fz = (v.pos.z + HALF) / PITCH; const i = h[0] > 0 ? Math.floor(fx) : h[0] < 0 ? Math.ceil(fx) : Math.round(fx), j = h[1] > 0 ? Math.floor(fz) : h[1] < 0 ? Math.ceil(fz) : Math.round(fz); this.from = [clamp(i, 0, N), clamp(j, 0, N)]; this.to = [clamp(i + h[0], 0, N), clamp(j + h[1], 0, N)]; if (this.from[0] === this.to[0] && this.from[1] === this.to[1]) { const o = DIRS.find(q => edgeOk(i, j, q[0], q[1])); this.to = [i + o[0], j + o[1]]; } } this.nextNode(); this.phase = 0;
+    const v = this.v; if (!this.from) { const h = Math.abs(Math.sin(v.yaw)) > .7 ? [Math.sign(Math.sin(v.yaw)), 0] : [0, Math.sign(Math.cos(v.yaw))]; const fx = (v.pos.x + HALF) / PITCH, fz = (v.pos.z + HALF) / PITCH; const i = h[0] > 0 ? Math.floor(fx) : h[0] < 0 ? Math.ceil(fx) : Math.round(fx), j = h[1] > 0 ? Math.floor(fz) : h[1] < 0 ? Math.ceil(fz) : Math.round(fz); this.from = [clamp(i, NI0, NI1), clamp(j, NJ0, NJ1)]; this.to = [clamp(i + h[0], NI0, NI1), clamp(j + h[1], NJ0, NJ1)]; if (this.from[0] === this.to[0] && this.from[1] === this.to[1]) { const o = DIRS.find(q => edgeOk(i, j, q[0], q[1])); this.to = [i + o[0], j + o[1]]; } } this.nextNode(); this.phase = 0;
   }
   nextNode() { const [i, j] = this.to, dx = i - this.from[0], dz = j - this.from[1]; const op = DIRS.filter(([a, b]) => edgeOk(i, j, a, b) && !(a === -dx && b === -dz)); let o = op.length ? pick(op) : [-dx, -dz]; const st = op.find(q => q[0] === dx && q[1] === dz); if (st && chance(.5)) o = st; this.next = [i + o[0], j + o[1]]; this.dir = [dx, dz]; this.ndir = o; }
   update(dt, far) {

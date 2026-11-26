@@ -83,3 +83,4 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;background:#fff;color:#1
 .hud.coop .toasts{width:260px;gap:5px}.hud.coop .toast{font-size:14px;padding:7px 10px}.hud.coop .toast:nth-last-child(n+4){display:none}.hud.coop.three .toasts{top:54%}.hud.coop .h-cash{font-size:24px}
 
 .hud.coop.lone .toasts{width:330px}.hud.coop.lone .toast{font-size:16px}
+.photohud{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);background:rgba(8,10,14,.7);padding:8px 16px;font:500 14px var(--ui);color:#d8dce4;pointer-events:none;border-bottom:2px solid var(--gold);white-space:nowrap}.photohud b{color:var(--gold);margin-right:10px;letter-spacing:.1em}
